@@ -263,7 +263,7 @@ yc managed-kubernetes cluster list
 ## Удаление базы данных в Terraform
 ```
 cd $REPO/terraform
-terraform destroy -var yc_folder=$FOLDER_ID -var yc_token=$YC_TOKEN -var user=$USER
+terraform destroy -var yc_folder=$FOLDER_ID -var user=$USER
 yc managed-postgresql cluster list
 ```
 
