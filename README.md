@@ -41,7 +41,7 @@ cat ~/.ssh/id_rsa.pub
 ## Настройка консольной утилиты yc для работы с Яндекс Облаком
 1. В браузере вернитесь на страницу облака и скопиройте id каталога:
 ```
-echo "export YC_FOLDER=<FOLDER_ID>" >> ~/.bashrc
+echo "export FOLDER_ID=folder-id-here" >> ~/.bashrc
 . ~/.bashrc
 ```
 1. Выполните в терминале `yc config set instance-service-account true`, чтобы использовать yc от привязанного к ВМ
@@ -75,7 +75,7 @@ terraform init
 ```
 1. Разверните инфраструктуру с помощью Terraform:
 ```
-terraform apply -var yc_folder=$YC_FOLDER -var user=$USER
+terraform apply -var yc_folder=$FOLDER_ID -var user=$USER
 ```
 
 1. Развертывание кластера займет какое-то время. Оставьте открытым терминал с запущенным Terraform 
@@ -258,7 +258,7 @@ yc managed-kubernetes cluster list
 ## Удаление базы данных в Terraform
 ```
 cd $REPO/terraform
-terraform destroy -var yc_folder=$YC_FOLDER -var yc_token=$YC_TOKEN -var user=$USER
+terraform destroy -var yc_folder=$FOLDER_ID -var yc_token=$YC_TOKEN -var user=$USER
 yc managed-postgresql cluster list
 ```
 
