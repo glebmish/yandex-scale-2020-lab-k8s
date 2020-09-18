@@ -257,8 +257,6 @@ kubectl delete -f lab-demo.yaml
 ```
 yc managed-kubernetes cluster list
 yc managed-kubernetes cluster delete lab-k8s
-yc iam service-account delete k8s-cluster-manager
-yc iam service-account delete k8s-image-puller
 yc managed-kubernetes cluster list
 ```
 
