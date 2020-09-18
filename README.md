@@ -32,32 +32,25 @@ cat ~/.ssh/id_rsa.pub
 1. Создайте виртуальную машину в Консоли из образа `base-image`:
 * В каталоге нажмите кнопку `Создать ресурс`, выберите ресурс `Виртуальная машина`, введите имя `lab-vm`, выберите опцию
 `Удалять вместе с ВМ`, `Наполнение` из образа. Выберите образ `base-image`;
-* В разделе `Доступ` введите логин для доступа к ВМ. Скопируйте SSH-ключ из файла `~/.ssh/id_rsa.pub`.
+* В разделе `Доступ` выберите аккаунт `sa-admin-<folder-id>`, введите логин для доступа к ВМ. Скопируйте SSH-ключ из файла `~/.ssh/id_rsa.pub`.
 
 1. Дождитесь создания ВМ (должен быть статус `Running`);
 1. Зайдите на созданную ВМ по ssh;
 1. Дальнейшие команды будут выполняться на созданной ВМ.
 
 ## Настройка консольной утилиты yc для работы с Яндекс Облаком
-1. Выполните в терминале `yc init`;
-1. Перейдите по полученной ссылке вида `https://oauth.yandex.ru/authorize?response_type=token&client_id=1a...`; 
-1. Выберите `cloud` и `folder`, выберите `compute zone` ru-central1-b;
+1. В браузере вернитесь на страницу облака и скопиройте id каталога:
+```
+echo "export YC_FOLDER=<FOLDER_ID>" >> ~/.bashrc
+. ~/.bashrc
+```
+1. Выполните в терминале `yc config set instance-service-account true`, чтобы использовать yc от привязанного к ВМ
+сервисного аккаунта;
+1. Выполните в терминале `yc config set folder-id $FOLDER_ID`;
 
 1. Проверьте, что yc настроен корректно: выведите список виртуальных машин в каталоге с помощью `yc`:
 ```
 yc compute instance list
-```
-
-1. Сохраните в переменные окружения значения `OAuth-token` и `folder`: 
-```
-export YC_FOLDER=$(yc config get folder-id)
-export YC_TOKEN=$(yc config get token)
-
-printenv YC_FOLDER
-printenv YC_TOKEN
-
-echo "export YC_FOLDER=$(yc config get folder-id)" >> ~/.bashrc
-echo "export YC_TOKEN=$(yc config get token)" >> ~/.bashrc
 ```
 
 # Развертывание кластера PostgreSQL с помощью Terraform
@@ -67,8 +60,8 @@ echo "export YC_TOKEN=$(yc config get token)" >> ~/.bashrc
 1. На ВМ загружен репозиторий с файлами для практической работы. Обновите версию репозитория и сохраните 
 путь к репозиторию в переменной окружения `REPO` (установите свой путь, если директория отличается от примера):
 ```
-export REPO=/home/common/yandex-scale-2020-lab-k8s
 echo "export REPO=/home/common/yandex-scale-2020-lab-k8s" >> ~/.bashrc
+. ~/.bashrc
 cd $REPO
 git pull
 ```
@@ -82,21 +75,17 @@ terraform init
 ```
 1. Разверните инфраструктуру с помощью Terraform:
 ```
-terraform apply -var yc_folder=$YC_FOLDER -var yc_token=$YC_TOKEN -var user=$USER
+terraform apply -var yc_folder=$YC_FOLDER -var user=$USER
 ```
 
 1. Развертывание кластера займет какое-то время. Оставьте открытым терминал с запущенным Terraform 
 и перейдите к следующему шагу. Позже мы проверим, что кластер создался.
 
 # Создание Managed K8S
-## Создание сервисных аккаунтов
-1. Создайте сервисный аккаунт `k8s-cluster-manager` с ролью `editor`.
-1. Создайте сервисный аккаунт `k8s-image-puller` с ролью `container-registry.images.puller`;
-
 ## Создание кластера
 1. Создайте ресурс `Кластер Kubernetes` с именем lab-k8s:
-* Укажите `k8s-cluster-manager` в качестве сервисного аккаунта для ресурсов;
-* Укажите `k8s-image-puller` в качестве сервисного аккаунта для узлов;
+* Укажите `k8s-cluster-manager-<folder-id>` в качестве сервисного аккаунта для ресурсов;
+* Укажите `k8s-image-puller-<folder-id>` в качестве сервисного аккаунта для узлов;
 * Дождитесь создания кластера.
 
 ## Создание группы узлов
@@ -110,10 +99,9 @@ terraform apply -var yc_folder=$YC_FOLDER -var yc_token=$YC_TOKEN -var user=$USE
 
 1. Сохраните данные о кластере в переменные окружения:
 ```
-export DATABASE_URI=<database_uri>
 echo "export DATABASE_URI=$DATABASE_URI" >> ~/.bashrc
-export DATABASE_HOSTS=<database_hosts>
 echo "export DATABASE_URI=$DATABASE_HOSTS" >> ~/.bashrc
+. ~/.bashrc
 ```
 
 1. Проверьте результат работы Terraform:
@@ -146,6 +134,7 @@ cat ~/.docker/config.json
     "cr.cloud.yandex.net": "yc",
     "cr.yandex": "yc"
   }
+}
 ```
 
 ## Сборка и загрузка docker-образов в Container Registry 
