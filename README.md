@@ -29,26 +29,28 @@ ssh-keygen -t rsa -b 2048 # генерация нового ssh-ключа
 cat ~/.ssh/id_rsa.pub
 ```
 
-1. Создайте виртуальную машину в Консоли из образа `base-image`:
+2. Создайте виртуальную машину в Консоли из образа `base-image`:
 * В каталоге нажмите кнопку `Создать ресурс`, выберите ресурс `Виртуальная машина`, введите имя `lab-vm`, выберите опцию
 `Удалять вместе с ВМ`, `Наполнение` из образа. Выберите образ `base-image`;
 * В разделе `Доступ` выберите аккаунт `sa-admin-<folder-id>`, введите логин для доступа к ВМ. Скопируйте SSH-ключ из файла `~/.ssh/id_rsa.pub`.
 
-1. Дождитесь создания ВМ (должен быть статус `Running`);
-1. Зайдите на созданную ВМ по ssh;
-1. Дальнейшие команды будут выполняться на созданной ВМ.
+3. Дождитесь создания ВМ (должен быть статус `Running`);
+4. Зайдите на созданную ВМ по ssh;
+5. Дальнейшие команды будут выполняться на созданной ВМ.
 
 ## Настройка консольной утилиты yc для работы с Яндекс Облаком
 1. В браузере вернитесь на страницу облака и скопиройте id каталога:
 ```
 echo "export FOLDER_ID=folder-id-here" >> ~/.bashrc
 . ~/.bashrc
+echo $FOLDER_ID
+yc resource-manager folder get $FOLDER_ID
 ```
-1. Выполните в терминале `yc config set instance-service-account true`, чтобы использовать yc от привязанного к ВМ
+2. Выполните в терминале `yc config set instance-service-account true`, чтобы использовать yc от привязанного к ВМ
 сервисного аккаунта;
-1. Выполните в терминале `yc config set folder-id $FOLDER_ID`;
+3. Выполните в терминале `yc config set folder-id $FOLDER_ID`;
 
-1. Проверьте, что yc настроен корректно: выведите список виртуальных машин в каталоге с помощью `yc`:
+4. Проверьте, что yc настроен корректно: выведите список виртуальных машин в каталоге с помощью `yc`:
 ```
 yc compute instance list
 ```
@@ -62,6 +64,7 @@ yc compute instance list
 ```
 echo "export REPO=/home/common/yandex-scale-2020-lab-k8s" >> ~/.bashrc
 . ~/.bashrc
+echo $REPO
 cd $REPO
 git pull
 ```
@@ -71,14 +74,15 @@ git pull
 1. Перейдите в каталог с описанием инфраструктуры приложения и инициализируйте Terraform:
 ```
 cd $REPO/terraform/
+ls
 terraform init
 ```
-1. Разверните инфраструктуру с помощью Terraform:
+2. Разверните инфраструктуру с помощью Terraform:
 ```
 terraform apply -var yc_folder=$FOLDER_ID -var user=$USER
 ```
 
-1. Развертывание кластера займет какое-то время. Оставьте открытым терминал с запущенным Terraform 
+3. Развертывание кластера займет какое-то время. Оставьте открытым терминал с запущенным Terraform
 и перейдите к следующему шагу. Позже мы проверим, что кластер создался.
 
 # Создание Managed K8S
@@ -91,20 +95,22 @@ terraform apply -var yc_folder=$FOLDER_ID -var user=$USER
 ## Создание группы узлов
 1. Создайте группу узлов с именем `lab-k8s-group` и одним узлом:
 * Доступ внутрь ВМ нам не потребуется, поэтому в разделе `Доступ` можно ввести любой текст.
-1. Пока группа узлов создается, мы проверим результаты работы Terraform и подготовим докер образ с приложением. Оставьте окно браузера открытым и перейдите в консоль
+2. Пока группа узлов создается, мы проверим результаты работы Terraform и подготовим докер образ с приложением. Оставьте окно браузера открытым и перейдите в консоль
 
 # Проверка кластера PostgreSQL
 
 1. Вернитесь к терминалу с запущенным Terraform. По завершении работы в секции `Outputs` можно будет увидеть данные о кластере.
 
-1. Сохраните данные о кластере в переменные окружения:
+2. Сохраните данные о кластере в переменные окружения:
 ```
-echo "export DATABASE_URI=$DATABASE_URI" >> ~/.bashrc
-echo "export DATABASE_URI=$DATABASE_HOSTS" >> ~/.bashrc
+echo "export DATABASE_URI=database_uri-here" >> ~/.bashrc
+echo "export DATABASE_HOSTS=database_hosts-here" >> ~/.bashrc
 . ~/.bashrc
+echo $DATABASE_URI
+echo $DATABASE_HOSTS
 ```
 
-1. Проверьте результат работы Terraform:
+3. Проверьте результат работы Terraform:
 ```
 yc managed-postgresql cluster list
 export PG_ID=<ID>
@@ -114,14 +120,14 @@ yc managed-postgresql cluster get $PG_ID
 # Подготовка docker-образов
 ## Создание Container Registry
 1. Создайте registry: `yc container registry create --name lab-registry`;
-1. Проверьте его наличие через терминал: 
+2. Проверьте его наличие через терминал:
 ```
 yc container registry list
 export REGISTRY_ID=<ID>
 yc container registry get $REGISTRY_ID
 ```
 
-1. Настройте аутентификацию в docker:
+3. Настройте аутентификацию в docker:
 ```
 yc container registry configure-docker
 cat ~/.docker/config.json
@@ -146,6 +152,7 @@ cd $REPO/app
 2. Собираем образ приложения: 
 ```
 sudo docker build . --tag cr.yandex/$REGISTRY_ID/lab-demo:v1
+sudo docker images
 ```
 
 3. Загружаем образ
@@ -161,7 +168,7 @@ sudo docker push cr.yandex/$REGISTRY_ID/lab-demo:v1
 # Проверка кластера K8S
 
 1. На странице браузера, где создавалась группа узлов, проверьте что создание завершено.
-1. В терминале проверьте, что кластер доступен к использованию
+2. В терминале проверьте, что кластер доступен к использованию
 ```
 yc managed-kubernetes cluster list
 export K8S_ID=<ID>
@@ -194,7 +201,7 @@ envsubst \$REGISTRY_ID,\$DATABASE_URI,\$DATABASE_HOSTS <lab-demo.yaml.tpl > lab-
 cat lab-demo.yaml
 ```
 
-4. Разверните ресурсы:
+3. Разверните ресурсы:
 ```
 kubectl apply -f lab-demo.yaml
 kubectl describe deployment lab-demo
@@ -205,7 +212,7 @@ kubectl apply -f load-balancer.yaml
 kubectl describe service lab-demo
 ```
 
-5. Как только балансировщик нагрузки полноценно развернется и получит внешний URL (поле `LoadBalancer Ingress`),
+4. Как только балансировщик нагрузки полноценно развернется и получит внешний URL (поле `LoadBalancer Ingress`),
 проверим работоспособность сервиса в браузере.
 
 # Изменения в архитектуре сервиса для обеспечения отказойстойчивости
