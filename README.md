@@ -44,7 +44,6 @@ cat ~/.ssh/id_rsa.pub
 echo "export FOLDER_ID=folder-id-here" >> ~/.bashrc
 . ~/.bashrc
 echo $FOLDER_ID
-yc resource-manager folder get $FOLDER_ID
 ```
 2. Выполните в терминале `yc config set instance-service-account true`, чтобы использовать yc от привязанного к ВМ
 сервисного аккаунта;
