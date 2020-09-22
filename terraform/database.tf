@@ -6,18 +6,26 @@ locals {
   dburi = "postgresql://${local.dbuser}:${local.dbpassword}@:1/${local.dbname}"
 }
 
+data "yandex_vpc_network" "lab-network" {
+  name = "lab-network"
+}
+
+data "yandex_vpc_subnet" "lab-subnet-b" {
+  name = "lab-subnet-b"
+}
+
 resource "yandex_mdb_postgresql_cluster" "lab-postgresql" {
   name        = "lab-postgresql"
   folder_id   = var.yc_folder
   environment = "PRODUCTION"
-  network_id  = yandex_vpc_network.lab-network.id
+  network_id  = data.yandex_vpc_network.lab-network.id
 
   config {
     version = 12
     resources {
-      resource_preset_id = "s2.small"
+      resource_preset_id = "s2.micro"
       disk_type_id       = "network-ssd"
-      disk_size          = 64
+      disk_size          = 32
     }
   }
 
@@ -36,7 +44,6 @@ resource "yandex_mdb_postgresql_cluster" "lab-postgresql" {
 
   host {
     zone      = "ru-central1-b"
-    subnet_id = yandex_vpc_subnet.lab-subnet-b.id
-    assign_public_ip = true
+    subnet_id = data.yandex_vpc_subnet.lab-subnet-b.id
   }
 }
