@@ -29,8 +29,10 @@ cat ~/.ssh/id_rsa.pub
 ```
 
 2. Создайте в Консоли виртуальную машину из образа `base-image`:
-* В каталоге нажмите кнопку `Создать ресурс`, выберите ресурс `Виртуальная машина`, введите имя `lab-vm`, выберите опцию
-`Удалять вместе с ВМ`, `Тип диска` SSD, `Наполнение` из образа. Выберите образ `base-image`;
+* В каталоге нажмите кнопку `Создать ресурс`, выберите ресурс `Виртуальная машина`, введите имя `lab-vm`.
+* В секции `Выбор образа/загрузочного диска` выберете вкладку `Пользовательские`, выберете загрузочный диск
+из образа `base-image`.
+* В секции `Диски` у созданного диска выберите `Тип диска` SSD.
 * В разделе `Доступ` выберите аккаунт `sa-admin-<folder-id>`, введите логин для входа на ВМ.
 Скопируйте SSH-ключ из файла `~/.ssh/id_rsa.pub`.
 
@@ -116,6 +118,27 @@ yc managed-postgresql cluster list
 yc managed-postgresql cluster get <ID>
 ```
 
+# Проверка кластера K8S
+
+1. На странице браузера, где создавалась группа узлов, проверьте, что создание группы завершено.
+2. В терминале проверьте, что кластер доступен к использованию:
+```
+yc managed-kubernetes cluster list
+echo "export K8S_ID=k8s-id-here" >> ~/.bashrc && . ~/.bashrc
+echo $K8S_ID
+yc managed-kubernetes cluster --id=$K8S_ID get
+yc managed-kubernetes cluster --id=$K8S_ID list-node-groups
+```
+
+## Добавление учетных данных в конфигурационный файл Kubectl
+```
+yc managed-kubernetes cluster get-credentials --id=$K8S_ID --external
+```
+Конфигурация будет записана в файл `~/.kube/config`, проверим его содержимое:
+```
+cat ~/.kube/config
+```
+
 # Подготовка Docker-образов
 ## Создание Container Registry
 1. Создайте реестр: `yc container registry create --name lab-registry`;
@@ -166,27 +189,6 @@ sudo docker push cr.yandex/$REGISTRY_ID/lab-demo:v1
 
 1. Получите список Docker-образов в реестре командой `yc container image list`.
 * В результате в таблице отборазятся ID образа, дата его создания и другие данные.
-
-# Проверка кластера K8S
-
-1. На странице браузера, где создавалась группа узлов, проверьте, что создание группы завершено.
-2. В терминале проверьте, что кластер доступен к использованию:
-```
-yc managed-kubernetes cluster list
-echo "export K8S_ID=k8s-id-here" >> ~/.bashrc && . ~/.bashrc
-echo $K8S_ID
-yc managed-kubernetes cluster --id=$K8S_ID get
-yc managed-kubernetes cluster --id=$K8S_ID list-node-groups
-```
-
-## Добавление учетных данных в конфигурационный файл Kubectl
-```
-yc managed-kubernetes cluster get-credentials --id=$K8S_ID --external
-```
-Конфигурация будет записана в файл `~/.kube/config`, проверим его содержимое:
-```
-cat ~/.kube/config
-```
 
 # Развертывание приложения и балансировщика нагрузки в k8s
 1. Просмотрите файлы конфигурации:
